@@ -3,6 +3,8 @@ package com.bookkeeper.service;
 import com.bookkeeper.model.Alert;
 import com.bookkeeper.model.Farmer;
 import com.bookkeeper.model.Sale;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,11 +16,15 @@ import java.util.List;
 public class AlertService {
     private final FarmerService farmerService;
     private final SaleService saleService;
+    private final MessageSource messageSource;
     private final BigDecimal largeAdvanceThreshold = new BigDecimal("1000");
 
-    public AlertService(FarmerService farmerService, SaleService saleService) {
+    public AlertService(FarmerService farmerService,
+                        SaleService saleService,
+                        MessageSource messageSource) {
         this.farmerService = farmerService;
         this.saleService = saleService;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -36,7 +42,10 @@ public class AlertService {
                 Alert a = new Alert();
                 a.setType("CreditLimitBreach");
                 a.setEntityId(f.getId());
-                a.setMessage("Advance " + advance + " exceeds credit limit " + limit);
+                a.setMessage(messageSource.getMessage(
+                        "alert.creditLimitBreach",
+                        new Object[]{advance, limit},
+                        LocaleContextHolder.getLocale()));
                 alerts.add(a);
             }
             // large advance
@@ -44,7 +53,10 @@ public class AlertService {
                 Alert a = new Alert();
                 a.setType("LargeAdvance");
                 a.setEntityId(f.getId());
-                a.setMessage("Advance " + advance + " exceeds threshold " + largeAdvanceThreshold);
+                a.setMessage(messageSource.getMessage(
+                        "alert.largeAdvance",
+                        new Object[]{advance, largeAdvanceThreshold},
+                        LocaleContextHolder.getLocale()));
                 alerts.add(a);
             }
         }
@@ -56,7 +68,10 @@ public class AlertService {
                 Alert a = new Alert();
                 a.setType("OverduePayment");
                 a.setEntityId(s.getId());
-                a.setMessage("Sale " + s.getId() + " is overdue since " + s.getDueDate());
+                a.setMessage(messageSource.getMessage(
+                        "alert.overduePayment",
+                        new Object[]{s.getId(), s.getDueDate()},
+                        LocaleContextHolder.getLocale()));
                 alerts.add(a);
             }
         }

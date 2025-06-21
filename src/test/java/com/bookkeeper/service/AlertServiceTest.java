@@ -6,6 +6,10 @@ import com.bookkeeper.model.Sale;
 import com.bookkeeper.model.SaleRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import java.util.Locale;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,6 +21,7 @@ class AlertServiceTest {
     private FarmerService farmerService;
     private JournalService journalService;
     private SaleService saleService;
+    private MessageSource messageSource;
     private AlertService alertService;
 
     @BeforeEach
@@ -24,7 +29,11 @@ class AlertServiceTest {
         farmerService = new FarmerService();
         journalService = new JournalService();
         saleService = new SaleService(journalService);
-        alertService = new AlertService(farmerService, saleService);
+        ResourceBundleMessageSource src = new ResourceBundleMessageSource();
+        src.setBasename("messages");
+        src.setDefaultEncoding("UTF-8");
+        messageSource = src;
+        alertService = new AlertService(farmerService, saleService, messageSource);
     }
 
     @Test
@@ -60,5 +69,15 @@ class AlertServiceTest {
         Sale s = saleService.addSale(req);
         List<Alert> alerts = alertService.getAlerts();
         assertTrue(alerts.stream().anyMatch(a -> "OverduePayment".equals(a.getType()) && a.getEntityId().equals(s.getId())));
+    }
+
+    @Test
+    void testTamilLocaleMessage() {
+        Farmer f = farmerService.addFarmer("C", "Ch", "", "", BigDecimal.ZERO, new BigDecimal("50"), List.of(), "", "");
+        farmerService.recordAdvance(f.getId(), new BigDecimal("100"));
+        LocaleContextHolder.setLocale(new Locale("ta"));
+        List<Alert> alerts = alertService.getAlerts();
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        assertTrue(alerts.get(0).getMessage().contains("முன்பணம்"));
     }
 }
