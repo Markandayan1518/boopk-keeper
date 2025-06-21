@@ -1,11 +1,13 @@
 package com.bookkeeper.service;
 
 import com.bookkeeper.model.Advance;
+import com.bookkeeper.model.Farmer;
 import org.springframework.stereotype.Service;
 import com.bookkeeper.service.JournalService;
 import com.bookkeeper.model.JournalEntry;
 import com.bookkeeper.model.JournalEntryLine;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,9 +31,16 @@ public class AdvanceService {
      * Returns the saved Advance or null if limit exceeded or farmer not found.
      */
     public Advance addAdvance(Advance adv) {
-        // check and update farmer advance
-        boolean ok = farmerService.recordAdvance(adv.getFarmerId(), adv.getAmount());
-        if (!ok) return null;
+        // check limit before updating farmer's advance
+        Farmer f = farmerService.getFarmerById(adv.getFarmerId()).orElse(null);
+        if (f == null) return null;
+        BigDecimal current = f.getCurrentAdvance() != null ? f.getCurrentAdvance() : BigDecimal.ZERO;
+        BigDecimal limit = f.getCreditLimit();
+        if (limit != null && current.add(adv.getAmount()).compareTo(limit) > 0) {
+            return null;
+        }
+        // safe to record advance
+        farmerService.recordAdvance(adv.getFarmerId(), adv.getAmount());
         // generate unique ID: advYYYYMMDD_farmerId[_n]
         String dateStr = StringUtils.remove(adv.getDate().toString(), '-');
         String baseId = "adv" + dateStr + "_" + adv.getFarmerId();

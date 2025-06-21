@@ -59,6 +59,12 @@
             <version>5.9.3</version>
             <scope>test</scope>
         </dependency>
+        <!-- SpringDoc OpenAPI for Swagger UI -->
+        <dependency>
+          <groupId>org.springdoc</groupId>
+          <artifactId>springdoc-openapi-ui</artifactId>
+          <version>1.6.15</version>
+        </dependency>
     </dependencies>
 
     <build>

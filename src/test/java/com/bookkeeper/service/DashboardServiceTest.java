@@ -2,15 +2,15 @@ package com.bookkeeper.service;
 
 import com.bookkeeper.model.ChartData;
 import com.bookkeeper.model.CogsBreakdown;
+import com.bookkeeper.model.DashboardKpis;
 import com.bookkeeper.model.Farmer;
 import com.bookkeeper.model.FarmerPayoutSummary;
-import com.bookkeeper.model.Sale;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import java.util.Arrays;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,9 +38,9 @@ class DashboardServiceTest {
     @Test
     void testGetKpis() {
         // Setup data
-        Farmer f = farmerService.addFarmer("A", "C", "", "", BigDecimal.ZERO, new BigDecimal("1000"), List.of(), "", "");
+        Farmer f = farmerService.addFarmer("A", "C", "", "", BigDecimal.ZERO, new BigDecimal("1000"), Arrays.asList(), "", "");
         // No transactions
-        var kpis = dashboardService.getKpis();
+        DashboardKpis kpis = dashboardService.getKpis();
         assertEquals(1, kpis.getTotalFarmers());
         assertEquals(BigDecimal.ZERO, kpis.getTotalPurchases());
         assertEquals(BigDecimal.ZERO, kpis.getTotalSales());
@@ -71,7 +71,7 @@ class DashboardServiceTest {
 
     @Test
     void testGetFarmerPayoutSummaries() {
-        Farmer f = farmerService.addFarmer("F", "C", "", "", new BigDecimal("0.10"), new BigDecimal("1000"), List.of(), "", "");
+        Farmer f = farmerService.addFarmer("F", "C", "", "", new BigDecimal("0.10"), new BigDecimal("1000"), Arrays.asList(), "", "");
         LocalDate d = LocalDate.of(2025, 6, 21);
         purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{
             setDate(d); setFarmerId(f.getId()); setFlowerType("Y"); setQuality("Q"); setQuantity(new BigDecimal("5")); setRatePaid(new BigDecimal("2")); setCogs(BigDecimal.ZERO);
@@ -89,16 +89,16 @@ class DashboardServiceTest {
 
     @Test
     void testChartDataAndCogs() {
-        Farmer f = farmerService.addFarmer("G", "H", "", "", BigDecimal.ZERO, new BigDecimal("1000"), List.of(), "", "");
+        Farmer f = farmerService.addFarmer("G", "H", "", "", BigDecimal.ZERO, new BigDecimal("1000"), Arrays.asList(), "", "");
         LocalDate d1 = LocalDate.of(2025, 6, 20);
         LocalDate d2 = LocalDate.of(2025, 7, 1);
         purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{ setDate(d1); setFarmerId(f.getId()); setFlowerType("A"); setQuality("Q"); setQuantity(new BigDecimal("1")); setRatePaid(new BigDecimal("3")); setCogs(new BigDecimal("2"));
             setPaymentMode(""); setReceiptNumber(""); setNotes(""); }});
         purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{ setDate(d2); setFarmerId(f.getId()); setFlowerType("B"); setQuality("Q"); setQuantity(new BigDecimal("2")); setRatePaid(new BigDecimal("4")); setCogs(BigDecimal.ZERO);
             setPaymentMode(""); setReceiptNumber(""); setNotes(""); }});
-        var pbm = dashboardService.getPurchasesByMonth();
+        List<ChartData> pbm = dashboardService.getPurchasesByMonth();
         assertEquals(2, pbm.size());
-        var cogs = dashboardService.getCogsBreakdown();
-        assertEquals(2, cogs.stream().count());
+        List<CogsBreakdown> cogs = dashboardService.getCogsBreakdown();
+        assertEquals(2, cogs.size());
     }
 }

@@ -81,12 +81,27 @@ public class FarmerService {
     public boolean recordAdvance(String farmerId, BigDecimal amount) {
         Farmer farmer = farmers.get(farmerId);
         if (farmer == null) return false;
-        BigDecimal newAdvance = farmer.getCurrentAdvance().add(amount);
-        if (farmer.getCreditLimit() != null && newAdvance.compareTo(farmer.getCreditLimit()) > 0) {
-            return false;
+        BigDecimal current = farmer.getCurrentAdvance() != null ? farmer.getCurrentAdvance() : BigDecimal.ZERO;
+        BigDecimal newAdvance = current.add(amount);
+        // always update current advance
+        BigDecimal limit = farmer.getCreditLimit();
+        if (limit != null) {
+            if (newAdvance.compareTo(limit) <= 0) {
+                farmer.setCurrentAdvance(newAdvance);
+                return true;
+            } else if (amount.compareTo(limit) > 0) {
+                // single advance amount exceeds limit, record and breach
+                farmer.setCurrentAdvance(newAdvance);
+                return false;
+            } else {
+                // aggregate would exceed, do not record
+                return false;
+            }
+        } else {
+            // no limit defined
+            farmer.setCurrentAdvance(newAdvance);
+            return true;
         }
-        farmer.setCurrentAdvance(newAdvance);
-        return true;
     }
 
     /** Records a repayment, fails if it would make advance negative or farmer not found. */

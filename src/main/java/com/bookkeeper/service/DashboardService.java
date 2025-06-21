@@ -4,6 +4,7 @@ import com.bookkeeper.model.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -61,14 +62,15 @@ public class DashboardService {
                 Farmer f = farmerService.getFarmerById(farmerId).orElse(null);
                 BigDecimal commission = BigDecimal.ZERO;
                 if (f != null && f.getCommissionRate() != null) {
-                    commission = total.multiply(f.getCommissionRate());
+                    commission = total.multiply(f.getCommissionRate())
+                        .setScale(1, RoundingMode.HALF_UP);
                 }
                 FarmerPayoutSummary s = new FarmerPayoutSummary();
                 s.setFarmerId(farmerId);
                 s.setMonth(month);
                 s.setTotalPurchases(total);
                 s.setCommission(commission);
-                s.setNetPayout(total.subtract(commission));
+                s.setNetPayout(total.subtract(commission).setScale(1, RoundingMode.HALF_UP));
                 return s;
             }).collect(Collectors.toList());
     }
