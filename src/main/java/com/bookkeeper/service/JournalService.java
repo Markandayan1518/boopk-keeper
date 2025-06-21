@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Service for managing journal entries in double-entry format. Ensures debits equal credits.
@@ -32,8 +33,8 @@ public class JournalService {
             return null; // invalid balanced entry
         }
         String dateStr = entry.getDate() != null
-                ? entry.getDate().toString().replaceAll("-", "")
-                : LocalDate.now().toString().replaceAll("-", "");
+                ? StringUtils.remove(entry.getDate().toString(), '-')
+                : StringUtils.remove(LocalDate.now().toString(), '-');
         String baseId = "je" + dateStr;
         String id = baseId;
         int suffix = 1;

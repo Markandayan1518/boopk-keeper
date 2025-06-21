@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Service
 public class RepaymentService {
@@ -30,7 +31,7 @@ public class RepaymentService {
     public Repayment addRepayment(Repayment rep) {
         boolean ok = farmerService.recordRepayment(rep.getFarmerId(), rep.getAmount());
         if (!ok) return null;
-        String dateStr = rep.getDate().toString().replaceAll("-", "");
+        String dateStr = StringUtils.remove(rep.getDate().toString(), '-');
         String baseId = "rep" + dateStr + "_" + rep.getFarmerId();
         String id = baseId;
         int suffix = 1;

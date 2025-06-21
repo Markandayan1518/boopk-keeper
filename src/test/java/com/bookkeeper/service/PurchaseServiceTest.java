@@ -92,6 +92,8 @@ class PurchaseServiceTest {
         req.setRatePaid(new BigDecimal("2.00"));
         boolean updated = purchaseService.updatePurchase(p.getId(), req);
         assertTrue(updated);
+        // After update there should still only be one purchase record
+        assertEquals(1, purchaseService.listPurchases().size());
         Purchase updatedP = purchaseService.getPurchaseById(p.getId()).get();
         assertEquals(new BigDecimal("2.00").multiply(req.getQuantity()).add(req.getCogs()), updatedP.getTotalValue());
 

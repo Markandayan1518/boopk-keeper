@@ -7,6 +7,8 @@ import com.bookkeeper.service.AlertService;
 import com.bookkeeper.service.FarmerService;
 import com.bookkeeper.service.JournalService;
 import com.bookkeeper.service.SaleService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +22,7 @@ class AlertControllerTest {
     private FarmerService farmerService;
     private JournalService journalService;
     private SaleService saleService;
+    private MessageSource messageSource;
     private AlertService alertService;
     private AlertController alertController;
 
@@ -28,7 +31,11 @@ class AlertControllerTest {
         farmerService = new FarmerService();
         journalService = new JournalService();
         saleService = new SaleService(journalService);
-        alertService = new AlertService(farmerService, saleService);
+        ResourceBundleMessageSource src = new ResourceBundleMessageSource();
+        src.setBasename("messages");
+        src.setDefaultEncoding("UTF-8");
+        messageSource = src;
+        alertService = new AlertService(farmerService, saleService, messageSource);
         alertController = new AlertController(alertService);
     }
 
