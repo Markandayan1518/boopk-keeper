@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Service
 public class PurchaseService {
@@ -27,7 +28,7 @@ public class PurchaseService {
 
     /** Adds a new purchase, calculates derived fields. */
     public Purchase addPurchase(PurchaseRequest req) {
-        String baseId = "p" + req.getDate().toString().replaceAll("-", "") + "_" + req.getFarmerId();
+        String baseId = "p" + StringUtils.remove(req.getDate().toString(), '-') + "_" + req.getFarmerId();
         String id = baseId;
         int suffix = 1;
         while (purchases.containsKey(id)) {
@@ -88,11 +89,26 @@ public class PurchaseService {
     /** Update existing purchase */
     public boolean updatePurchase(String id, PurchaseRequest req) {
         if (!purchases.containsKey(id)) return false;
-        Purchase orig = purchases.get(id);
-        req.setDate(req.getDate());
-        Purchase updated = addPurchase(req);
-        updated.setId(id);
-        purchases.put(id, updated);
+        Purchase p = purchases.get(id);
+        p.setDate(req.getDate());
+        p.setFarmerId(req.getFarmerId());
+        p.setFlowerType(req.getFlowerType());
+        p.setQuality(req.getQuality());
+        p.setQuantity(req.getQuantity());
+        p.setRatePaid(req.getRatePaid());
+        p.setCogs(req.getCogs());
+        // Recalculate totals and market values without creating new journal entry
+        BigDecimal total = req.getRatePaid().multiply(req.getQuantity()).add(req.getCogs());
+        p.setTotalValue(total);
+        BigDecimal mRate = marketRateService.getRate(req.getDate(), req.getFlowerType()).orElse(BigDecimal.ZERO);
+        p.setMarketRate(mRate);
+        BigDecimal mValue = mRate.multiply(req.getQuantity());
+        p.setMarketValue(mValue);
+        p.setVariance(total.subtract(mValue));
+        p.setPaymentMode(req.getPaymentMode());
+        p.setReceiptNumber(req.getReceiptNumber());
+        p.setNotes(req.getNotes());
+        purchases.put(id, p);
         return true;
     }
 

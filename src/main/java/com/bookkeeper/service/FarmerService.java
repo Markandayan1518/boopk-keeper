@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Basic in-memory Farmer management service with auto-generated IDs.
@@ -27,7 +28,7 @@ public class FarmerService {
                             List<String> flowerTypes,
                             String bankDetails,
                             String remarks) {
-        String baseId = (name.trim() + "_" + city.trim()).toLowerCase().replaceAll("\\s+", "_");
+        String baseId = StringUtils.replacePattern((name.trim() + "_" + city.trim()).toLowerCase(), "\\s+", "_");
         String id = baseId;
         int suffix = 1;
         while (farmers.containsKey(id)) {
