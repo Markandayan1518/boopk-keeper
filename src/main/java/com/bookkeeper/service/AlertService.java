@@ -1,0 +1,65 @@
+package com.bookkeeper.service;
+
+import com.bookkeeper.model.Alert;
+import com.bookkeeper.model.Farmer;
+import com.bookkeeper.model.Sale;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class AlertService {
+    private final FarmerService farmerService;
+    private final SaleService saleService;
+    private final BigDecimal largeAdvanceThreshold = new BigDecimal("1000");
+
+    public AlertService(FarmerService farmerService, SaleService saleService) {
+        this.farmerService = farmerService;
+        this.saleService = saleService;
+    }
+
+    /**
+     * Scans system for alerts: credit limit breaches, large advances, overdue payments.
+     */
+    public List<Alert> getAlerts() {
+        List<Alert> alerts = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        // Credit limit breach & large advances
+        for (Farmer f : farmerService.listFarmers()) {
+            BigDecimal advance = f.getCurrentAdvance() != null ? f.getCurrentAdvance() : BigDecimal.ZERO;
+            BigDecimal limit = f.getCreditLimit();
+            // credit limit breach
+            if (limit != null && advance.compareTo(limit) > 0) {
+                Alert a = new Alert();
+                a.setType("CreditLimitBreach");
+                a.setEntityId(f.getId());
+                a.setMessage("Advance " + advance + " exceeds credit limit " + limit);
+                alerts.add(a);
+            }
+            // large advance
+            if (advance.compareTo(largeAdvanceThreshold) > 0) {
+                Alert a = new Alert();
+                a.setType("LargeAdvance");
+                a.setEntityId(f.getId());
+                a.setMessage("Advance " + advance + " exceeds threshold " + largeAdvanceThreshold);
+                alerts.add(a);
+            }
+        }
+        // Overdue payments
+        for (Sale s : saleService.listSales()) {
+            if (s.getDueDate() != null && s.getPaymentStatus() != null
+                    && !"PAID".equalsIgnoreCase(s.getPaymentStatus())
+                    && s.getDueDate().isBefore(now)) {
+                Alert a = new Alert();
+                a.setType("OverduePayment");
+                a.setEntityId(s.getId());
+                a.setMessage("Sale " + s.getId() + " is overdue since " + s.getDueDate());
+                alerts.add(a);
+            }
+        }
+        return alerts;
+    }
+}
