@@ -25,18 +25,18 @@ class PurchaseServiceTest {
     }
 
     private PurchaseRequest sampleRequest(LocalDate date, String farmerId, String type, BigDecimal qty, BigDecimal ratePaid, BigDecimal cogs) {
-        PurchaseRequest req = new PurchaseRequest();
-        req.setDate(date);
-        req.setFarmerId(farmerId);
-        req.setFlowerType(type);
-        req.setQuality("A");
-        req.setQuantity(qty);
-        req.setRatePaid(ratePaid);
-        req.setCogs(cogs);
-        req.setPaymentMode("Cash");
-        req.setReceiptNumber("RCPT123");
-        req.setNotes("Test note");
-        return req;
+        return PurchaseRequest.builder()
+            .withDate(date)
+            .withFarmerId(farmerId)
+            .withFlowerType(type)
+            .withQuality("A")
+            .withQuantity(qty)
+            .withRatePaid(ratePaid)
+            .withCogs(cogs)
+            .withPaymentMode("Cash")
+            .withReceiptNumber("RCPT123")
+            .withNotes("Test note")
+            .build();
     }
 
     @Test
@@ -89,13 +89,15 @@ class PurchaseServiceTest {
         assertTrue(found.isPresent());
 
         // update by changing ratePaid
-        req.setRatePaid(new BigDecimal("2.00"));
-        boolean updated = purchaseService.updatePurchase(p.getId(), req);
+        PurchaseRequest updatedReq = PurchaseRequest.from(req)
+            .withRatePaid(new BigDecimal("2.00"))
+            .build();
+        boolean updated = purchaseService.updatePurchase(p.getId(), updatedReq);
         assertTrue(updated);
         // After update there should still only be one purchase record
         assertEquals(1, purchaseService.listPurchases().size());
         Purchase updatedP = purchaseService.getPurchaseById(p.getId()).get();
-        assertEquals(new BigDecimal("2.00").multiply(req.getQuantity()).add(req.getCogs()), updatedP.getTotalValue());
+        assertEquals(new BigDecimal("2.00").multiply(updatedReq.getQuantity()).add(updatedReq.getCogs()), updatedP.getTotalValue());
 
         boolean removed = purchaseService.removePurchase(p.getId());
         assertTrue(removed);

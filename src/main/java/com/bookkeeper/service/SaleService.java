@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Service
 public class SaleService {
@@ -26,41 +27,50 @@ public class SaleService {
      * Records a new sale and calculates total amount.
      */
     public Sale addSale(SaleRequest req) {
-        String baseId = req.getInvoiceNumber();
+        String baseId = StringUtils.remove(req.getDate().toString(), '-');
         String id = baseId;
         int suffix = 1;
         while (sales.containsKey(id)) {
             id = baseId + "_" + suffix++;
         }
-        Sale sale = new Sale();
-        sale.setId(id);
-        sale.setDate(req.getDate());
-        sale.setInvoiceNumber(req.getInvoiceNumber());
-        sale.setBuyer(req.getBuyer());
-        sale.setFlowerType(req.getFlowerType());
-        sale.setQuantity(req.getQuantity());
-        sale.setRate(req.getRate());
-        BigDecimal total = req.getRate().multiply(req.getQuantity());
-        sale.setTotalAmount(total);
-        sale.setPaymentStatus(req.getPaymentStatus());
-        sale.setDueDate(req.getDueDate());
-        sale.setPaymentDate(req.getPaymentDate());
-        sale.setNotes(req.getNotes());
+
+        BigDecimal totalAmount = req.getQuantity().multiply(req.getRate());
+        Sale sale = Sale.builder()
+            .withId(id)
+            .withDate(req.getDate())
+            .withInvoiceNumber(req.getInvoiceNumber())
+            .withBuyer(req.getBuyer())
+            .withFlowerType(req.getFlowerType())
+            .withQuantity(req.getQuantity())
+            .withRate(req.getRate())
+            .withTotalAmount(totalAmount)
+            .withPaymentStatus(req.getPaymentStatus())
+            .withDueDate(req.getDueDate())
+            .withPaymentDate(req.getPaymentDate())
+            .withNotes(req.getNotes())
+            .build();
+
         sales.put(id, sale);
-        // Create journal entry: Dr Cash, Cr Sales
-        JournalEntry je = new JournalEntry();
-        je.setDate(sale.getDate());
-        je.setDescription("Sale " + sale.getId());
-        List<JournalEntryLine> lines = new ArrayList<>();
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("Cash"); dr.setDebit(total); dr.setCredit(null);
-        dr.setReferenceType("Sale"); dr.setReferenceId(sale.getId());
-        lines.add(dr);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("Sales"); cr.setDebit(null); cr.setCredit(total);
-        cr.setReferenceType("Sale"); cr.setReferenceId(sale.getId());
-        lines.add(cr);
-        je.setLines(lines);
+
+        // Create journal entry
+        JournalEntry je = JournalEntry.builder()
+            .withDate(sale.getDate())
+            .withDescription("Sale " + sale.getId())
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("AccountsReceivable")
+                    .withDebit(totalAmount)
+                    .withReferenceType("Sale")
+                    .withReferenceId(id)
+                    .build(),
+                JournalEntryLine.builder()
+                    .withAccount("Revenue")
+                    .withCredit(totalAmount)
+                    .withReferenceType("Sale")
+                    .withReferenceId(id)
+                    .build()
+            ))
+            .build();
         journalService.addEntry(je);
         return sale;
     }
@@ -74,21 +84,22 @@ public class SaleService {
     }
 
     public boolean updateSale(String id, SaleRequest req) {
-        if (!sales.containsKey(id)) {
-            return false;
-        }
-        Sale sale = sales.get(id);
-        sale.setDate(req.getDate());
-        sale.setInvoiceNumber(req.getInvoiceNumber());
-        sale.setBuyer(req.getBuyer());
-        sale.setFlowerType(req.getFlowerType());
-        sale.setQuantity(req.getQuantity());
-        sale.setRate(req.getRate());
-        sale.setTotalAmount(req.getRate().multiply(req.getQuantity()));
-        sale.setPaymentStatus(req.getPaymentStatus());
-        sale.setDueDate(req.getDueDate());
-        sale.setPaymentDate(req.getPaymentDate());
-        sale.setNotes(req.getNotes());
+        if (!sales.containsKey(id)) return false;
+        BigDecimal totalAmount = req.getQuantity().multiply(req.getRate());
+        Sale sale = Sale.builder()
+            .withId(id)
+            .withDate(req.getDate())
+            .withInvoiceNumber(req.getInvoiceNumber())
+            .withBuyer(req.getBuyer())
+            .withFlowerType(req.getFlowerType())
+            .withQuantity(req.getQuantity())
+            .withRate(req.getRate())
+            .withTotalAmount(totalAmount)
+            .withPaymentStatus(req.getPaymentStatus())
+            .withDueDate(req.getDueDate())
+            .withPaymentDate(req.getPaymentDate())
+            .withNotes(req.getNotes())
+            .build();
         sales.put(id, sale);
         return true;
     }

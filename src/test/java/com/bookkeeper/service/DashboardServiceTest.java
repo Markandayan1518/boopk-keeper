@@ -49,17 +49,41 @@ class DashboardServiceTest {
         assertEquals(BigDecimal.ZERO, kpis.getTotalOutstanding());
 
         // Add purchase
-        purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{
-            setDate(LocalDate.now()); setFarmerId(f.getId()); setFlowerType("X"); setQuality("Q"); setQuantity(new BigDecimal("2")); setRatePaid(new BigDecimal("10")); setCogs(BigDecimal.ZERO);
-            setPaymentMode("Cash"); setReceiptNumber("R"); setNotes("");
-        }});
+        purchaseService.addPurchase(com.bookkeeper.model.PurchaseRequest.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withFlowerType("X")
+            .withQuality("Q")
+            .withQuantity(new BigDecimal("2"))
+            .withRatePaid(new BigDecimal("10"))
+            .withCogs(BigDecimal.ZERO)
+            .withPaymentMode("Cash")
+            .withReceiptNumber("R")
+            .withNotes("")
+            .build());
         // Add sale
-        saleService.addSale(new com.bookkeeper.model.SaleRequest() {{
-            setDate(LocalDate.now()); setInvoiceNumber("I1"); setBuyer("B"); setFlowerType("X"); setQuantity(new BigDecimal("1")); setRate(new BigDecimal("5")); setPaymentStatus("PAID"); setPaymentDate(LocalDate.now()); setNotes("");
-        }});
+        saleService.addSale(com.bookkeeper.model.SaleRequest.builder()
+            .withDate(LocalDate.now())
+            .withInvoiceNumber("I1")
+            .withBuyer("B")
+            .withFlowerType("X")
+            .withQuantity(new BigDecimal("1"))
+            .withRate(new BigDecimal("5"))
+            .withPaymentStatus("PAID")
+            .withPaymentDate(LocalDate.now())
+            .withNotes("")
+            .build());
         // Add advance and repayment
-        advanceService.addAdvance(new com.bookkeeper.model.Advance() {{ setDate(LocalDate.now()); setFarmerId(f.getId()); setAmount(new BigDecimal("100")); }});
-        repaymentService.addRepayment(new com.bookkeeper.model.Repayment() {{ setDate(LocalDate.now()); setFarmerId(f.getId()); setAmount(new BigDecimal("30")); }});
+        advanceService.addAdvance(com.bookkeeper.model.Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("100"))
+            .build());
+        repaymentService.addRepayment(com.bookkeeper.model.Repayment.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("30"))
+            .build());
 
         kpis = dashboardService.getKpis();
         assertEquals(new BigDecimal("20"), kpis.getTotalPurchases());
@@ -73,10 +97,18 @@ class DashboardServiceTest {
     void testGetFarmerPayoutSummaries() {
         Farmer f = farmerService.addFarmer("F", "C", "", "", new BigDecimal("0.10"), new BigDecimal("1000"), Arrays.asList(), "", "");
         LocalDate d = LocalDate.of(2025, 6, 21);
-        purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{
-            setDate(d); setFarmerId(f.getId()); setFlowerType("Y"); setQuality("Q"); setQuantity(new BigDecimal("5")); setRatePaid(new BigDecimal("2")); setCogs(BigDecimal.ZERO);
-            setPaymentMode("Cash"); setReceiptNumber("R"); setNotes("");
-        }});
+        purchaseService.addPurchase(com.bookkeeper.model.PurchaseRequest.builder()
+            .withDate(d)
+            .withFarmerId(f.getId())
+            .withFlowerType("Y")
+            .withQuality("Q")
+            .withQuantity(new BigDecimal("5"))
+            .withRatePaid(new BigDecimal("2"))
+            .withCogs(BigDecimal.ZERO)
+            .withPaymentMode("Cash")
+            .withReceiptNumber("R")
+            .withNotes("")
+            .build());
         List<FarmerPayoutSummary> sums = dashboardService.getFarmerPayoutSummaries();
         assertEquals(1, sums.size());
         FarmerPayoutSummary s = sums.get(0);
@@ -92,10 +124,30 @@ class DashboardServiceTest {
         Farmer f = farmerService.addFarmer("G", "H", "", "", BigDecimal.ZERO, new BigDecimal("1000"), Arrays.asList(), "", "");
         LocalDate d1 = LocalDate.of(2025, 6, 20);
         LocalDate d2 = LocalDate.of(2025, 7, 1);
-        purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{ setDate(d1); setFarmerId(f.getId()); setFlowerType("A"); setQuality("Q"); setQuantity(new BigDecimal("1")); setRatePaid(new BigDecimal("3")); setCogs(new BigDecimal("2"));
-            setPaymentMode(""); setReceiptNumber(""); setNotes(""); }});
-        purchaseService.addPurchase(new com.bookkeeper.model.PurchaseRequest() {{ setDate(d2); setFarmerId(f.getId()); setFlowerType("B"); setQuality("Q"); setQuantity(new BigDecimal("2")); setRatePaid(new BigDecimal("4")); setCogs(BigDecimal.ZERO);
-            setPaymentMode(""); setReceiptNumber(""); setNotes(""); }});
+        purchaseService.addPurchase(com.bookkeeper.model.PurchaseRequest.builder()
+            .withDate(d1)
+            .withFarmerId(f.getId())
+            .withFlowerType("A")
+            .withQuality("Q")
+            .withQuantity(new BigDecimal("1"))
+            .withRatePaid(new BigDecimal("3"))
+            .withCogs(new BigDecimal("2"))
+            .withPaymentMode("")
+            .withReceiptNumber("")
+            .withNotes("")
+            .build());
+        purchaseService.addPurchase(com.bookkeeper.model.PurchaseRequest.builder()
+            .withDate(d2)
+            .withFarmerId(f.getId())
+            .withFlowerType("B")
+            .withQuality("Q")
+            .withQuantity(new BigDecimal("2"))
+            .withRatePaid(new BigDecimal("4"))
+            .withCogs(BigDecimal.ZERO)
+            .withPaymentMode("")
+            .withReceiptNumber("")
+            .withNotes("")
+            .build());
         List<ChartData> pbm = dashboardService.getPurchasesByMonth();
         assertEquals(2, pbm.size());
         List<CogsBreakdown> cogs = dashboardService.getCogsBreakdown();

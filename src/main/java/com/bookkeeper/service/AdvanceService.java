@@ -49,22 +49,30 @@ public class AdvanceService {
         while (advances.containsKey(id)) {
             id = baseId + "_" + suffix++;
         }
-        adv.setId(id);
+        // Create new advance with generated ID
+        adv = Advance.from(adv)
+            .withId(id)
+            .build();
         advances.put(id, adv);
         // Create journal entry: Dr AdvancesToFarmers, Cr Cash
-        JournalEntry je = new JournalEntry();
-        je.setDate(adv.getDate());
-        je.setDescription("Advance " + adv.getId());
-        List<JournalEntryLine> lines = new ArrayList<>();
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("AdvancesToFarmers"); dr.setDebit(adv.getAmount()); dr.setCredit(null);
-        dr.setReferenceType("Advance"); dr.setReferenceId(id);
-        lines.add(dr);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("Cash"); cr.setDebit(null); cr.setCredit(adv.getAmount());
-        cr.setReferenceType("Advance"); cr.setReferenceId(id);
-        lines.add(cr);
-        je.setLines(lines);
+        JournalEntry je = JournalEntry.builder()
+            .withDate(adv.getDate())
+            .withDescription("Advance " + adv.getId())
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("AdvancesToFarmers")
+                    .withDebit(adv.getAmount())
+                    .withReferenceType("Advance")
+                    .withReferenceId(id)
+                    .build(),
+                JournalEntryLine.builder()
+                    .withAccount("Cash")
+                    .withCredit(adv.getAmount())
+                    .withReferenceType("Advance")
+                    .withReferenceId(id)
+                    .build()
+            ))
+            .build();
         journalService.addEntry(je);
         return adv;
     }

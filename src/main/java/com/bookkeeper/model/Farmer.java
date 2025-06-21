@@ -18,37 +18,75 @@ public class Farmer {
 
     public Farmer() {}
 
-    // getters and setters
+    private Farmer(Builder builder) {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.city = builder.city;
+        this.contact = builder.contact;
+        this.address = builder.address;
+        this.commissionRate = builder.commissionRate;
+        this.creditLimit = builder.creditLimit;
+        this.currentAdvance = builder.currentAdvance;
+        this.flowerTypes = builder.flowerTypes;
+        this.bankDetails = builder.bankDetails;
+        this.remarks = builder.remarks;
+    }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static Builder from(Farmer farmer) {
+        return builder()
+            .withId(farmer.getId())
+            .withName(farmer.getName())
+            .withCity(farmer.getCity())
+            .withContact(farmer.getContact())
+            .withAddress(farmer.getAddress())
+            .withCommissionRate(farmer.getCommissionRate())
+            .withCreditLimit(farmer.getCreditLimit())
+            .withCurrentAdvance(farmer.getCurrentAdvance())
+            .withFlowerTypes(farmer.getFlowerTypes())
+            .withBankDetails(farmer.getBankDetails())
+            .withRemarks(farmer.getRemarks());
+    }
+
+    public static class Builder {
+        private String id;
+        private String name;
+        private String city;
+        private String contact;
+        private String address;
+        private BigDecimal commissionRate;
+        private BigDecimal creditLimit;
+        private BigDecimal currentAdvance;
+        private List<String> flowerTypes;
+        private String bankDetails;
+        private String remarks;
+
+        public Builder withId(String id) { this.id = id; return this; }
+        public Builder withName(String name) { this.name = name; return this; }
+        public Builder withCity(String city) { this.city = city; return this; }
+        public Builder withContact(String contact) { this.contact = contact; return this; }
+        public Builder withAddress(String address) { this.address = address; return this; }
+        public Builder withCommissionRate(BigDecimal rate) { this.commissionRate = rate; return this; }
+        public Builder withCreditLimit(BigDecimal limit) { this.creditLimit = limit; return this; }
+        public Builder withCurrentAdvance(BigDecimal advance) { this.currentAdvance = advance; return this; }
+        public Builder withFlowerTypes(List<String> types) { this.flowerTypes = types; return this; }
+        public Builder withBankDetails(String details) { this.bankDetails = details; return this; }
+        public Builder withRemarks(String remarks) { this.remarks = remarks; return this; }
+
+        public Farmer build() { return new Farmer(this); }
+    }
+
+    // getters only - removing setters for immutability
     public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
     public String getCity() { return city; }
-    public void setCity(String city) { this.city = city; }
-
     public String getContact() { return contact; }
-    public void setContact(String contact) { this.contact = contact; }
-
     public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-
     public BigDecimal getCommissionRate() { return commissionRate; }
-    public void setCommissionRate(BigDecimal commissionRate) { this.commissionRate = commissionRate; }
-
     public BigDecimal getCreditLimit() { return creditLimit; }
-    public void setCreditLimit(BigDecimal creditLimit) { this.creditLimit = creditLimit; }
-
     public BigDecimal getCurrentAdvance() { return currentAdvance; }
-    public void setCurrentAdvance(BigDecimal currentAdvance) { this.currentAdvance = currentAdvance; }
-
     public List<String> getFlowerTypes() { return flowerTypes; }
-    public void setFlowerTypes(List<String> flowerTypes) { this.flowerTypes = flowerTypes; }
-
     public String getBankDetails() { return bankDetails; }
-    public void setBankDetails(String bankDetails) { this.bankDetails = bankDetails; }
-
     public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
 }

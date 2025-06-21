@@ -35,18 +35,19 @@ public class FarmerService {
             id = baseId + "_" + suffix++;
         }
 
-        Farmer farmer = new Farmer();
-        farmer.setId(id);
-        farmer.setName(name);
-        farmer.setCity(city);
-        farmer.setContact(contact);
-        farmer.setAddress(address);
-        farmer.setCommissionRate(commissionRate);
-        farmer.setCreditLimit(creditLimit);
-        farmer.setCurrentAdvance(BigDecimal.ZERO);
-        farmer.setFlowerTypes(new ArrayList<>(flowerTypes));
-        farmer.setBankDetails(bankDetails);
-        farmer.setRemarks(remarks);
+        Farmer farmer = Farmer.builder()
+            .withId(id)
+            .withName(name)
+            .withCity(city)
+            .withContact(contact)
+            .withAddress(address)
+            .withCommissionRate(commissionRate)
+            .withCreditLimit(creditLimit)
+            .withCurrentAdvance(BigDecimal.ZERO)
+            .withFlowerTypes(new ArrayList<>(flowerTypes))
+            .withBankDetails(bankDetails)
+            .withRemarks(remarks)
+            .build();
 
         farmers.put(id, farmer);
         return farmer;
@@ -83,15 +84,15 @@ public class FarmerService {
         if (farmer == null) return false;
         BigDecimal current = farmer.getCurrentAdvance() != null ? farmer.getCurrentAdvance() : BigDecimal.ZERO;
         BigDecimal newAdvance = current.add(amount);
-        // always update current advance
         BigDecimal limit = farmer.getCreditLimit();
+
         if (limit != null) {
             if (newAdvance.compareTo(limit) <= 0) {
-                farmer.setCurrentAdvance(newAdvance);
+                farmers.put(farmerId, Farmer.from(farmer).withCurrentAdvance(newAdvance).build());
                 return true;
             } else if (amount.compareTo(limit) > 0) {
                 // single advance amount exceeds limit, record and breach
-                farmer.setCurrentAdvance(newAdvance);
+                farmers.put(farmerId, Farmer.from(farmer).withCurrentAdvance(newAdvance).build());
                 return false;
             } else {
                 // aggregate would exceed, do not record
@@ -99,7 +100,7 @@ public class FarmerService {
             }
         } else {
             // no limit defined
-            farmer.setCurrentAdvance(newAdvance);
+            farmers.put(farmerId, Farmer.from(farmer).withCurrentAdvance(newAdvance).build());
             return true;
         }
     }
@@ -112,7 +113,7 @@ public class FarmerService {
         if (newAdvance.compareTo(BigDecimal.ZERO) < 0) {
             return false;
         }
-        farmer.setCurrentAdvance(newAdvance);
+        farmers.put(farmerId, Farmer.from(farmer).withCurrentAdvance(newAdvance).build());
         return true;
     }
 }

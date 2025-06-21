@@ -27,13 +27,14 @@ class AdvanceServiceTest {
     @Test
     void testAddAdvanceWithinLimit() {
         Farmer f = farmerService.addFarmer("John", "City", "123", "Addr", BigDecimal.ZERO, new BigDecimal("500"), Arrays.asList(), "", "");
-        Advance adv = new Advance();
-        adv.setDate(LocalDate.now());
-        adv.setFarmerId(f.getId());
-        adv.setAmount(new BigDecimal("200"));
-        adv.setPaymentMode("Cash");
-        adv.setReceiptNumber("R1");
-        adv.setRemarks("Test");
+        Advance adv = Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("200"))
+            .withPaymentMode("Cash")
+            .withReceiptNumber("R1")
+            .withRemarks("Test")
+            .build();
         Advance saved = advanceService.addAdvance(adv);
         assertNotNull(saved);
         assertEquals(new BigDecimal("200"), farmerService.getFarmerById(f.getId()).get().getCurrentAdvance());
@@ -42,10 +43,11 @@ class AdvanceServiceTest {
     @Test
     void testAddAdvanceOverLimit() {
         Farmer f = farmerService.addFarmer("Jane", "Town", "456", "Addr2", BigDecimal.ZERO, new BigDecimal("100"), Arrays.asList(), "", "");
-        Advance adv = new Advance();
-        adv.setDate(LocalDate.now());
-        adv.setFarmerId(f.getId());
-        adv.setAmount(new BigDecimal("150"));
+        Advance adv = Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("150"))
+            .build();
         Advance saved = advanceService.addAdvance(adv);
         assertNull(saved);
         assertEquals(BigDecimal.ZERO, farmerService.getFarmerById(f.getId()).get().getCurrentAdvance());
@@ -54,8 +56,11 @@ class AdvanceServiceTest {
     @Test
     void testListAndRemoveAdvance() {
         Farmer f = farmerService.addFarmer("Ann", "Ville", "789", "Addr3", BigDecimal.ZERO, new BigDecimal("500"), Arrays.asList(), "", "");
-        Advance adv = new Advance();
-        adv.setDate(LocalDate.now()); adv.setFarmerId(f.getId()); adv.setAmount(new BigDecimal("50"));
+        Advance adv = Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("50"))
+            .build();
         Advance saved = advanceService.addAdvance(adv);
         List<Advance> list = advanceService.listAdvances();
         assertTrue(list.stream().anyMatch(a -> a.getId().equals(saved.getId())));

@@ -41,9 +41,16 @@ public class JournalService {
         while (entries.containsKey(id)) {
             id = baseId + "_" + suffix++;
         }
-        entry.setId(id);
-        entries.put(id, entry);
-        return entry;
+
+        JournalEntry newEntry = JournalEntry.builder()
+            .withId(id)
+            .withDate(entry.getDate())
+            .withDescription(entry.getDescription())
+            .withLines(entry.getLines())
+            .build();
+
+        entries.put(id, newEntry);
+        return newEntry;
     }
 
     public List<JournalEntry> listEntries() {
@@ -72,8 +79,15 @@ public class JournalService {
         if (totalDebit.compareTo(totalCredit) != 0) {
             return false;
         }
-        updated.setId(id);
-        entries.put(id, updated);
+
+        JournalEntry newEntry = JournalEntry.builder()
+            .withId(id)
+            .withDate(updated.getDate())
+            .withDescription(updated.getDescription())
+            .withLines(updated.getLines())
+            .build();
+
+        entries.put(id, newEntry);
         return true;
     }
 

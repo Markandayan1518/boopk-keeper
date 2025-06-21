@@ -28,50 +28,62 @@ public class PurchaseService {
 
     /** Adds a new purchase, calculates derived fields. */
     public Purchase addPurchase(PurchaseRequest req) {
-        String baseId = "p" + StringUtils.remove(req.getDate().toString(), '-') + "_" + req.getFarmerId();
+            String baseId = StringUtils.remove(req.getDate().toString(), '-') + "_" + req.getFarmerId();
         String id = baseId;
         int suffix = 1;
         while (purchases.containsKey(id)) {
             id = baseId + "_" + suffix++;
         }
-        Purchase p = new Purchase();
-        p.setId(id);
-        p.setDate(req.getDate());
-        p.setFarmerId(req.getFarmerId());
-        p.setFlowerType(req.getFlowerType());
-        p.setQuality(req.getQuality());
-        p.setQuantity(req.getQuantity());
-        p.setRatePaid(req.getRatePaid());
-        p.setCogs(req.getCogs());
-        // totalValue = (ratePaid * quantity) + cogs
-        BigDecimal total = req.getRatePaid().multiply(req.getQuantity()).add(req.getCogs());
-        p.setTotalValue(total);
-        // marketRate lookup
-        BigDecimal mRate = marketRateService.getRate(req.getDate(), req.getFlowerType()).orElse(BigDecimal.ZERO);
-        p.setMarketRate(mRate);
-        // marketValue = mRate * quantity
-        BigDecimal mValue = mRate.multiply(req.getQuantity());
-        p.setMarketValue(mValue);
-        // variance = total - marketValue
-        p.setVariance(total.subtract(mValue));
-        p.setPaymentMode(req.getPaymentMode());
-        p.setReceiptNumber(req.getReceiptNumber());
-        p.setNotes(req.getNotes());
+        Purchase p = Purchase.builder()
+            .withId(id)
+            .withDate(req.getDate())
+            .withFarmerId(req.getFarmerId())
+            .withFlowerType(req.getFlowerType())
+            .withQuality(req.getQuality())
+            .withQuantity(req.getQuantity())
+            .withRatePaid(req.getRatePaid())
+            .withCogs(req.getCogs())
+            .withPaymentMode(req.getPaymentMode())
+            .withReceiptNumber(req.getReceiptNumber())
+            .withNotes(req.getNotes())
+            .build();
+
+        // calculate total value
+        BigDecimal totalValue = req.getQuantity().multiply(req.getRatePaid()).add(req.getCogs());
+        p = Purchase.from(p)
+            .withTotalValue(totalValue)
+            .build();
+
+        // get market rate if available
+        Optional<BigDecimal> rateOpt = marketRateService.getRate(req.getDate(), req.getFlowerType());
+        BigDecimal rate = rateOpt.orElse(BigDecimal.ZERO);
+        p = Purchase.from(p)
+            .withMarketRate(rate)
+            .withMarketValue(rate.multiply(req.getQuantity()))
+            .withVariance(totalValue.subtract(rate.multiply(req.getQuantity())))
+            .build();
+
         purchases.put(id, p);
-        // Create corresponding journal entry: Dr Purchases, Cr Cash
-        JournalEntry je = new JournalEntry();
-        je.setDate(p.getDate());
-        je.setDescription("Purchase " + p.getId());
-        List<JournalEntryLine> lines = new ArrayList<>();
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("Purchases"); dr.setDebit(p.getTotalValue()); dr.setCredit(BigDecimal.ZERO);
-        dr.setReferenceType("Purchase"); dr.setReferenceId(p.getId());
-        lines.add(dr);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("Cash"); cr.setDebit(BigDecimal.ZERO); cr.setCredit(p.getTotalValue());
-        cr.setReferenceType("Purchase"); cr.setReferenceId(p.getId());
-        lines.add(cr);
-        je.setLines(lines);
+
+        // Create journal entry
+        JournalEntry je = JournalEntry.builder()
+            .withDate(p.getDate())
+            .withDescription("Purchase " + p.getId())
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("InventoryFlowers")
+                    .withDebit(p.getTotalValue())
+                    .withReferenceType("Purchase")
+                    .withReferenceId(id)
+                    .build(),
+                JournalEntryLine.builder()
+                    .withAccount("Cash")
+                    .withCredit(p.getTotalValue())
+                    .withReferenceType("Purchase")
+                    .withReferenceId(id)
+                    .build()
+            ))
+            .build();
         journalService.addEntry(je);
         return p;
     }
@@ -89,25 +101,34 @@ public class PurchaseService {
     /** Update existing purchase */
     public boolean updatePurchase(String id, PurchaseRequest req) {
         if (!purchases.containsKey(id)) return false;
-        Purchase p = purchases.get(id);
-        p.setDate(req.getDate());
-        p.setFarmerId(req.getFarmerId());
-        p.setFlowerType(req.getFlowerType());
-        p.setQuality(req.getQuality());
-        p.setQuantity(req.getQuantity());
-        p.setRatePaid(req.getRatePaid());
-        p.setCogs(req.getCogs());
-        // Recalculate totals and market values without creating new journal entry
-        BigDecimal total = req.getRatePaid().multiply(req.getQuantity()).add(req.getCogs());
-        p.setTotalValue(total);
-        BigDecimal mRate = marketRateService.getRate(req.getDate(), req.getFlowerType()).orElse(BigDecimal.ZERO);
-        p.setMarketRate(mRate);
-        BigDecimal mValue = mRate.multiply(req.getQuantity());
-        p.setMarketValue(mValue);
-        p.setVariance(total.subtract(mValue));
-        p.setPaymentMode(req.getPaymentMode());
-        p.setReceiptNumber(req.getReceiptNumber());
-        p.setNotes(req.getNotes());
+        Purchase p = Purchase.builder()
+            .withId(id)
+            .withDate(req.getDate())
+            .withFarmerId(req.getFarmerId())
+            .withFlowerType(req.getFlowerType())
+            .withQuality(req.getQuality())
+            .withQuantity(req.getQuantity())
+            .withRatePaid(req.getRatePaid())
+            .withCogs(req.getCogs())
+            .withPaymentMode(req.getPaymentMode())
+            .withReceiptNumber(req.getReceiptNumber())
+            .withNotes(req.getNotes())
+            .build();
+
+        // recalculate derived values
+        BigDecimal totalValue = req.getQuantity().multiply(req.getRatePaid()).add(req.getCogs());
+        p = Purchase.from(p)
+            .withTotalValue(totalValue)
+            .build();
+
+        Optional<BigDecimal> rateOpt = marketRateService.getRate(req.getDate(), req.getFlowerType());
+        BigDecimal rate = rateOpt.orElse(BigDecimal.ZERO);
+        p = Purchase.from(p)
+            .withMarketRate(rate)
+            .withMarketValue(rate.multiply(req.getQuantity()))
+            .withVariance(totalValue.subtract(rate.multiply(req.getQuantity())))
+            .build();
+
         purchases.put(id, p);
         return true;
     }

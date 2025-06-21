@@ -31,22 +31,26 @@ public class DashboardService {
     }
 
     public DashboardKpis getKpis() {
-        DashboardKpis k = new DashboardKpis();
         List<Farmer> farmers = farmerService.listFarmers();
-        k.setTotalFarmers(farmers.size());
-        k.setTotalPurchases(purchaseService.listPurchases().stream()
-                .map(Purchase::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add));
-        k.setTotalSales(saleService.listSales().stream()
-                .map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
-        BigDecimal adv = advanceService.listAdvances().stream()
+        BigDecimal totalPurchases = purchaseService.listPurchases().stream()
+                .map(Purchase::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSales = saleService.listSales().stream()
+                .map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal advances = advanceService.listAdvances().stream()
                 .map(Advance::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal rep = repaymentService.listRepayments().stream()
+        BigDecimal repayments = repaymentService.listRepayments().stream()
                 .map(Repayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        k.setTotalAdvances(adv);
-        k.setTotalRepayments(rep);
-        k.setTotalOutstanding(farmers.stream()
-                .map(Farmer::getCurrentAdvance).reduce(BigDecimal.ZERO, BigDecimal::add));
-        return k;
+        BigDecimal outstanding = farmers.stream()
+                .map(Farmer::getCurrentAdvance).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return DashboardKpis.builder()
+            .withTotalFarmers(farmers.size())
+            .withTotalPurchases(totalPurchases)
+            .withTotalSales(totalSales)
+            .withTotalAdvances(advances)
+            .withTotalRepayments(repayments)
+            .withTotalOutstanding(outstanding)
+            .build();
     }
 
     public List<FarmerPayoutSummary> getFarmerPayoutSummaries() {
@@ -65,13 +69,15 @@ public class DashboardService {
                     commission = total.multiply(f.getCommissionRate())
                         .setScale(1, RoundingMode.HALF_UP);
                 }
-                FarmerPayoutSummary s = new FarmerPayoutSummary();
-                s.setFarmerId(farmerId);
-                s.setMonth(month);
-                s.setTotalPurchases(total);
-                s.setCommission(commission);
-                s.setNetPayout(total.subtract(commission).setScale(1, RoundingMode.HALF_UP));
-                return s;
+                BigDecimal netPayout = total.subtract(commission).setScale(1, RoundingMode.HALF_UP);
+
+                return FarmerPayoutSummary.builder()
+                    .withFarmerId(farmerId)
+                    .withMonth(month)
+                    .withTotalPurchases(total)
+                    .withCommission(commission)
+                    .withNetPayout(netPayout)
+                    .build();
             }).collect(Collectors.toList());
     }
 
@@ -79,11 +85,14 @@ public class DashboardService {
         return purchaseService.listPurchases().stream()
             .collect(Collectors.groupingBy(Purchase::getFlowerType))
             .entrySet().stream().map(e -> {
-                CogsBreakdown c = new CogsBreakdown();
-                c.setFlowerType(e.getKey());
-                c.setTotalCogs(e.getValue().stream()
-                        .map(Purchase::getCogs).reduce(BigDecimal.ZERO, BigDecimal::add));
-                return c;
+                BigDecimal totalCogs = e.getValue().stream()
+                    .map(Purchase::getCogs)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                return CogsBreakdown.builder()
+                    .withFlowerType(e.getKey())
+                    .withTotalCogs(totalCogs)
+                    .build();
             }).collect(Collectors.toList());
     }
 
@@ -91,11 +100,14 @@ public class DashboardService {
         return purchaseService.listPurchases().stream()
             .collect(Collectors.groupingBy(Purchase::getFlowerType))
             .entrySet().stream().map(e -> {
-                MarketVariance m = new MarketVariance();
-                m.setFlowerType(e.getKey());
-                m.setTotalVariance(e.getValue().stream()
-                        .map(Purchase::getVariance).reduce(BigDecimal.ZERO, BigDecimal::add));
-                return m;
+                BigDecimal totalVariance = e.getValue().stream()
+                    .map(Purchase::getVariance)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                return MarketVariance.builder()
+                    .withFlowerType(e.getKey())
+                    .withTotalVariance(totalVariance)
+                    .build();
             }).collect(Collectors.toList());
     }
 
@@ -108,11 +120,12 @@ public class DashboardService {
             .map(Purchase::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add)
             .add(advanceService.listAdvances().stream()
                 .map(Advance::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
-        CashFlowReport r = new CashFlowReport();
-        r.setTotalInflows(inflows);
-        r.setTotalOutflows(outflows);
-        r.setNetFlow(inflows.subtract(outflows));
-        return r;
+
+        return CashFlowReport.builder()
+            .withTotalInflows(inflows)
+            .withTotalOutflows(outflows)
+            .withNetFlow(inflows.subtract(outflows))
+            .build();
     }
 
     /** Purchases total by month for charts/reports */
@@ -121,8 +134,12 @@ public class DashboardService {
         return purchaseService.listPurchases().stream()
             .collect(Collectors.groupingBy(p -> fmt.format(p.getDate())))
             .entrySet().stream()
-            .map(e -> new ChartData(e.getKey(), e.getValue().stream()
-                .map(Purchase::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add)))
+            .map(e -> ChartData.builder()
+                .withLabel(e.getKey())
+                .withValue(e.getValue().stream()
+                    .map(Purchase::getTotalValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .build())
             .sorted(Comparator.comparing(ChartData::getLabel))
             .collect(Collectors.toList());
     }
@@ -132,8 +149,12 @@ public class DashboardService {
         return saleService.listSales().stream()
             .collect(Collectors.groupingBy(Sale::getFlowerType))
             .entrySet().stream()
-            .map(e -> new ChartData(e.getKey(), e.getValue().stream()
-                .map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add)))
+            .map(e -> ChartData.builder()
+                .withLabel(e.getKey())
+                .withValue(e.getValue().stream()
+                    .map(Sale::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .build())
             .sorted(Comparator.comparing(ChartData::getLabel))
             .collect(Collectors.toList());
     }
@@ -144,8 +165,12 @@ public class DashboardService {
         return advanceService.listAdvances().stream()
             .collect(Collectors.groupingBy(a -> fmt.format(a.getDate())))
             .entrySet().stream()
-            .map(e -> new ChartData(e.getKey(), e.getValue().stream()
-                .map(Advance::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add)))
+            .map(e -> ChartData.builder()
+                .withLabel(e.getKey())
+                .withValue(e.getValue().stream()
+                    .map(Advance::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .build())
             .sorted(Comparator.comparing(ChartData::getLabel))
             .collect(Collectors.toList());
     }

@@ -1,5 +1,6 @@
 package com.bookkeeper.service;
 
+import com.bookkeeper.model.Advance;
 import com.bookkeeper.model.Repayment;
 import com.bookkeeper.model.Farmer;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,11 +30,16 @@ class RepaymentServiceTest {
     @Test
     void testAddRepaymentSuccess() {
         Farmer f = farmerService.addFarmer("F", "C", "", "", BigDecimal.ZERO, new BigDecimal("200"), Arrays.asList(), "", "");
-        advanceService.addAdvance(new com.bookkeeper.model.Advance() {{ setDate(LocalDate.now()); setFarmerId(f.getId()); setAmount(new BigDecimal("100")); }});
-        Repayment rep = new Repayment();
-        rep.setDate(LocalDate.now());
-        rep.setFarmerId(f.getId());
-        rep.setAmount(new BigDecimal("50"));
+        advanceService.addAdvance(Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("100"))
+            .build());
+        Repayment rep = Repayment.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("50"))
+            .build();
         Repayment saved = repaymentService.addRepayment(rep);
         assertNotNull(saved);
         assertEquals(new BigDecimal("50"), farmerService.getFarmerById(f.getId()).get().getCurrentAdvance());
@@ -41,18 +47,27 @@ class RepaymentServiceTest {
 
     @Test
     void testAddRepaymentWithoutAdvance() {
-        Repayment rep = new Repayment();
-        rep.setDate(LocalDate.now());
-        rep.setFarmerId("nope");
-        rep.setAmount(new BigDecimal("10"));
+        Repayment rep = Repayment.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId("nope")
+            .withAmount(new BigDecimal("10"))
+            .build();
         assertNull(repaymentService.addRepayment(rep));
     }
 
     @Test
     void testListAndRemoveRepayment() {
         Farmer f = farmerService.addFarmer("X", "Y", "", "", BigDecimal.ZERO, new BigDecimal("100"), Arrays.asList(), "", "");
-        advanceService.addAdvance(new com.bookkeeper.model.Advance() {{ setDate(LocalDate.now()); setFarmerId(f.getId()); setAmount(new BigDecimal("80")); }});
-        Repayment rep = new Repayment(); rep.setDate(LocalDate.now()); rep.setFarmerId(f.getId()); rep.setAmount(new BigDecimal("30"));
+        advanceService.addAdvance(Advance.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("80"))
+            .build());
+        Repayment rep = Repayment.builder()
+            .withDate(LocalDate.now())
+            .withFarmerId(f.getId())
+            .withAmount(new BigDecimal("30"))
+            .build();
         Repayment saved = repaymentService.addRepayment(rep);
         List<Repayment> list = repaymentService.listRepayments();
         assertTrue(list.stream().anyMatch(r -> r.getId().equals(saved.getId())));

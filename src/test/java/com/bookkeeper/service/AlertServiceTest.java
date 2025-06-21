@@ -55,17 +55,18 @@ class AlertServiceTest {
     @Test
     void testOverduePaymentAlert() {
         LocalDate past = LocalDate.now().minusDays(10);
-        SaleRequest req = new SaleRequest();
-        req.setDate(past);
-        req.setInvoiceNumber("INV");
-        req.setBuyer("X");
-        req.setFlowerType("F");
-        req.setQuantity(new BigDecimal("1"));
-        req.setRate(new BigDecimal("1"));
-        req.setPaymentStatus("PENDING");
-        req.setDueDate(past.minusDays(1));
-        req.setPaymentDate(null);
-        req.setNotes("");
+        SaleRequest req = SaleRequest.builder()
+            .withDate(past)
+            .withInvoiceNumber("INV")
+            .withBuyer("X")
+            .withFlowerType("F")
+            .withQuantity(new BigDecimal("1"))
+            .withRate(new BigDecimal("1"))
+            .withPaymentStatus("PENDING")
+            .withDueDate(past.minusDays(1))
+            .withPaymentDate(null)
+            .withNotes("")
+            .build();
         Sale s = saleService.addSale(req);
         List<Alert> alerts = alertService.getAlerts();
         assertTrue(alerts.stream().anyMatch(a -> "OverduePayment".equals(a.getType()) && a.getEntityId().equals(s.getId())));

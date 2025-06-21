@@ -1,7 +1,10 @@
 package com.bookkeeper.controller;
 
+import com.bookkeeper.model.Advance;
 import com.bookkeeper.model.Farmer;
 import com.bookkeeper.model.FarmerSummary;
+import com.bookkeeper.model.Purchase;
+import com.bookkeeper.model.Repayment;
 import com.bookkeeper.service.FarmerService;
 import com.bookkeeper.service.PurchaseService;
 import com.bookkeeper.service.AdvanceService;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,8 +71,20 @@ public class FarmerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateFarmer(@PathVariable String id, @RequestBody Farmer farmer) {
-        farmer.setId(id);
-        boolean updated = farmerService.updateFarmer(farmer);
+        Farmer updatedFarmer = Farmer.builder()
+            .withId(id)
+            .withName(farmer.getName())
+            .withCity(farmer.getCity())
+            .withContact(farmer.getContact())
+            .withAddress(farmer.getAddress())
+            .withCommissionRate(farmer.getCommissionRate())
+            .withCreditLimit(farmer.getCreditLimit())
+            .withCurrentAdvance(farmer.getCurrentAdvance())
+            .withFlowerTypes(farmer.getFlowerTypes())
+            .withBankDetails(farmer.getBankDetails())
+            .withRemarks(farmer.getRemarks())
+            .build();
+        boolean updated = farmerService.updateFarmer(updatedFarmer);
         return updated ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
@@ -96,20 +112,46 @@ public class FarmerController {
     @GetMapping("/summary")
     public List<FarmerSummary> getFarmerSummaries() {
         return farmerService.listFarmers().stream().map(f -> {
-            FarmerSummary s = new FarmerSummary();
-            s.setFarmerId(f.getId());
-            s.setName(f.getName());
-            s.setTotalPurchases(purchaseService.listPurchases().stream()
+            return FarmerSummary.builder()
+                .withFarmerId(f.getId())
+                .withName(f.getName())
+                .withTotalPurchases(purchaseService.listPurchases().stream()
                     .filter(p -> p.getFarmerId().equals(f.getId()))
-                    .map(p -> p.getTotalValue()).reduce(BigDecimal.ZERO, BigDecimal::add));
-            s.setTotalAdvances(advanceService.listAdvances().stream()
+                    .map(Purchase::getTotalValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .withTotalAdvances(advanceService.listAdvances().stream()
                     .filter(a -> a.getFarmerId().equals(f.getId()))
-                    .map(a -> a.getAmount()).reduce(BigDecimal.ZERO, BigDecimal::add));
-            s.setTotalRepayments(repaymentService.listRepayments().stream()
+                    .map(Advance::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .withTotalRepayments(repaymentService.listRepayments().stream()
                     .filter(r -> r.getFarmerId().equals(f.getId()))
-                    .map(r -> r.getAmount()).reduce(BigDecimal.ZERO, BigDecimal::add));
-            s.setCurrentAdvance(f.getCurrentAdvance());
-            return s;
+                    .map(Repayment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .withCurrentAdvance(f.getCurrentAdvance())
+                .build();
         }).collect(Collectors.toList());
+    }
+
+    @GetMapping("/farmers/{id}/summary")
+    public FarmerSummary getFarmerSummary(@PathVariable String id) {
+         // Calculate total purchases, advances, repayments for farmer
+         Map<String, BigDecimal> purchasesByFarmer = purchaseService.listPurchases().stream()
+             .collect(Collectors.groupingBy(Purchase::getFarmerId,
+                 Collectors.reducing(BigDecimal.ZERO, Purchase::getTotalValue, BigDecimal::add)));
+         Map<String, BigDecimal> advancesByFarmer = advanceService.listAdvances().stream()
+             .collect(Collectors.groupingBy(Advance::getFarmerId,
+                 Collectors.reducing(BigDecimal.ZERO, Advance::getAmount, BigDecimal::add)));
+         Map<String, BigDecimal> repaymentsByFarmer = repaymentService.listRepayments().stream()
+             .collect(Collectors.groupingBy(Repayment::getFarmerId,
+                 Collectors.reducing(BigDecimal.ZERO, Repayment::getAmount, BigDecimal::add)));
+        return FarmerSummary.builder()
+            .withFarmerId(id)
+            .withName(farmerService.getFarmerById(id).map(Farmer::getName).orElse(null))
+            .withTotalPurchases(purchasesByFarmer.getOrDefault(id, BigDecimal.ZERO))
+            .withTotalAdvances(advancesByFarmer.getOrDefault(id, BigDecimal.ZERO))
+            .withTotalRepayments(repaymentsByFarmer.getOrDefault(id, BigDecimal.ZERO))
+            .withCurrentAdvance(farmerService.getFarmerById(id)
+                .map(Farmer::getCurrentAdvance).orElse(BigDecimal.ZERO))
+            .build();
     }
 }

@@ -51,17 +51,18 @@ class AlertControllerTest {
                 new BigDecimal("50"), List.of(), "", "");
         farmerService.recordAdvance(f.getId(), new BigDecimal("100"));
 
-        SaleRequest req = new SaleRequest();
-        req.setDate(LocalDate.now().minusDays(10));
-        req.setInvoiceNumber("INV1");
-        req.setBuyer("Cust");
-        req.setFlowerType("Rose");
-        req.setQuantity(BigDecimal.ONE);
-        req.setRate(BigDecimal.ONE);
-        req.setPaymentStatus("PENDING");
-        req.setDueDate(LocalDate.now().minusDays(5));
-        req.setPaymentDate(null);
-        req.setNotes("");
+        SaleRequest req = SaleRequest.builder()
+            .withDate(LocalDate.now().minusDays(10))
+            .withInvoiceNumber("INV1")
+            .withBuyer("Cust")
+            .withFlowerType("Rose")
+            .withQuantity(BigDecimal.ONE)
+            .withRate(BigDecimal.ONE)
+            .withPaymentStatus("PENDING")
+            .withDueDate(LocalDate.now().minusDays(5))
+            .withPaymentDate(null)
+            .withNotes("")
+            .build();
         saleService.addSale(req);
 
         List<Alert> expected = alertService.getAlerts();

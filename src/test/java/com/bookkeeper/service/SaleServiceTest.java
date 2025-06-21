@@ -22,18 +22,18 @@ class SaleServiceTest {
     }
 
     private SaleRequest makeRequest(LocalDate date, String invoice, String buyer, String flower, BigDecimal qty, BigDecimal rate) {
-        SaleRequest req = new SaleRequest();
-        req.setDate(date);
-        req.setInvoiceNumber(invoice);
-        req.setBuyer(buyer);
-        req.setFlowerType(flower);
-        req.setQuantity(qty);
-        req.setRate(rate);
-        req.setPaymentStatus("PENDING");
-        req.setDueDate(date.plusDays(5));
-        req.setPaymentDate(null);
-        req.setNotes("note");
-        return req;
+        return SaleRequest.builder()
+            .withDate(date)
+            .withInvoiceNumber(invoice)
+            .withBuyer(buyer)
+            .withFlowerType(flower)
+            .withQuantity(qty)
+            .withRate(rate)
+            .withPaymentStatus("PENDING")
+            .withDueDate(date.plusDays(5))
+            .withPaymentDate(null)
+            .withNotes("note")
+            .build();
     }
 
     @Test

@@ -20,49 +20,95 @@ public class Purchase {
     private String receiptNumber;
     private String notes;
 
-    // getters and setters
+    // Getters
     public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
     public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
-
     public String getFarmerId() { return farmerId; }
-    public void setFarmerId(String farmerId) { this.farmerId = farmerId; }
-
     public String getFlowerType() { return flowerType; }
-    public void setFlowerType(String flowerType) { this.flowerType = flowerType; }
-
     public String getQuality() { return quality; }
-    public void setQuality(String quality) { this.quality = quality; }
-
     public BigDecimal getQuantity() { return quantity; }
-    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-
     public BigDecimal getRatePaid() { return ratePaid; }
-    public void setRatePaid(BigDecimal ratePaid) { this.ratePaid = ratePaid; }
-
     public BigDecimal getCogs() { return cogs; }
-    public void setCogs(BigDecimal cogs) { this.cogs = cogs; }
-
     public BigDecimal getMarketRate() { return marketRate; }
-    public void setMarketRate(BigDecimal marketRate) { this.marketRate = marketRate; }
-
     public BigDecimal getTotalValue() { return totalValue; }
-    public void setTotalValue(BigDecimal totalValue) { this.totalValue = totalValue; }
-
     public BigDecimal getMarketValue() { return marketValue; }
-    public void setMarketValue(BigDecimal marketValue) { this.marketValue = marketValue; }
-
     public BigDecimal getVariance() { return variance; }
-    public void setVariance(BigDecimal variance) { this.variance = variance; }
-
     public String getPaymentMode() { return paymentMode; }
-    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
-
     public String getReceiptNumber() { return receiptNumber; }
-    public void setReceiptNumber(String receiptNumber) { this.receiptNumber = receiptNumber; }
-
     public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+
+    private Purchase(Builder builder) {
+        this.id = builder.id;
+        this.date = builder.date;
+        this.farmerId = builder.farmerId;
+        this.flowerType = builder.flowerType;
+        this.quality = builder.quality;
+        this.quantity = builder.quantity;
+        this.ratePaid = builder.ratePaid;
+        this.cogs = builder.cogs;
+        this.marketRate = builder.marketRate;
+        this.totalValue = builder.totalValue;
+        this.marketValue = builder.marketValue;
+        this.variance = builder.variance;
+        this.paymentMode = builder.paymentMode;
+        this.receiptNumber = builder.receiptNumber;
+        this.notes = builder.notes;
+    }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static Builder from(Purchase purchase) {
+        return builder()
+            .withId(purchase.getId())
+            .withDate(purchase.getDate())
+            .withFarmerId(purchase.getFarmerId())
+            .withFlowerType(purchase.getFlowerType())
+            .withQuality(purchase.getQuality())
+            .withQuantity(purchase.getQuantity())
+            .withRatePaid(purchase.getRatePaid())
+            .withCogs(purchase.getCogs())
+            .withMarketRate(purchase.getMarketRate())
+            .withTotalValue(purchase.getTotalValue())
+            .withMarketValue(purchase.getMarketValue())
+            .withVariance(purchase.getVariance())
+            .withPaymentMode(purchase.getPaymentMode())
+            .withReceiptNumber(purchase.getReceiptNumber())
+            .withNotes(purchase.getNotes());
+    }
+
+    public static class Builder {
+        private String id;
+        private LocalDate date;
+        private String farmerId;
+        private String flowerType;
+        private String quality;
+        private BigDecimal quantity;
+        private BigDecimal ratePaid;
+        private BigDecimal cogs;
+        private BigDecimal marketRate;
+        private BigDecimal totalValue;
+        private BigDecimal marketValue;
+        private BigDecimal variance;
+        private String paymentMode;
+        private String receiptNumber;
+        private String notes;
+
+        public Builder withId(String id) { this.id = id; return this; }
+        public Builder withDate(LocalDate date) { this.date = date; return this; }
+        public Builder withFarmerId(String farmerId) { this.farmerId = farmerId; return this; }
+        public Builder withFlowerType(String flowerType) { this.flowerType = flowerType; return this; }
+        public Builder withQuality(String quality) { this.quality = quality; return this; }
+        public Builder withQuantity(BigDecimal quantity) { this.quantity = quantity; return this; }
+        public Builder withRatePaid(BigDecimal ratePaid) { this.ratePaid = ratePaid; return this; }
+        public Builder withCogs(BigDecimal cogs) { this.cogs = cogs; return this; }
+        public Builder withMarketRate(BigDecimal marketRate) { this.marketRate = marketRate; return this; }
+        public Builder withTotalValue(BigDecimal totalValue) { this.totalValue = totalValue; return this; }
+        public Builder withMarketValue(BigDecimal marketValue) { this.marketValue = marketValue; return this; }
+        public Builder withVariance(BigDecimal variance) { this.variance = variance; return this; }
+        public Builder withPaymentMode(String paymentMode) { this.paymentMode = paymentMode; return this; }
+        public Builder withReceiptNumber(String receiptNumber) { this.receiptNumber = receiptNumber; return this; }
+        public Builder withNotes(String notes) { this.notes = notes; return this; }
+
+        public Purchase build() { return new Purchase(this); }
+    }
 }

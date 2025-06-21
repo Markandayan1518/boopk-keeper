@@ -29,10 +29,10 @@ public class SaleController {
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus) {
         return saleService.listSales().stream()
                 .filter(s -> date == null || s.getDate().equals(LocalDate.parse(date)))
-                .filter(s -> invoiceNumber == null || s.getInvoiceNumber().equalsIgnoreCase(invoiceNumber))
-                .filter(s -> buyer == null || s.getBuyer().equalsIgnoreCase(buyer))
-                .filter(s -> flowerType == null || s.getFlowerType().equalsIgnoreCase(flowerType))
-                .filter(s -> paymentStatus == null || s.getPaymentStatus().equalsIgnoreCase(paymentStatus))
+                .filter(s -> invoiceNumber == null || invoiceNumber.equalsIgnoreCase(s.getInvoiceNumber()))
+                .filter(s -> buyer == null || buyer.equalsIgnoreCase(s.getBuyer()))
+                .filter(s -> flowerType == null || flowerType.equalsIgnoreCase(s.getFlowerType()))
+                .filter(s -> paymentStatus == null || paymentStatus.equalsIgnoreCase(s.getPaymentStatus()))
                 .collect(Collectors.toList());
     }
 

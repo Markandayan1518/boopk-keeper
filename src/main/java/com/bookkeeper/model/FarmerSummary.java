@@ -13,21 +13,50 @@ public class FarmerSummary {
     private BigDecimal totalRepayments;
     private BigDecimal currentAdvance;
 
+    private FarmerSummary(Builder builder) {
+        this.farmerId = builder.farmerId;
+        this.name = builder.name;
+        this.totalPurchases = builder.totalPurchases;
+        this.totalAdvances = builder.totalAdvances;
+        this.totalRepayments = builder.totalRepayments;
+        this.currentAdvance = builder.currentAdvance;
+    }
+
+    public static Builder from(FarmerSummary summary) {
+        return builder()
+            .withFarmerId(summary.getFarmerId())
+            .withName(summary.getName())
+            .withTotalPurchases(summary.getTotalPurchases())
+            .withTotalAdvances(summary.getTotalAdvances())
+            .withTotalRepayments(summary.getTotalRepayments())
+            .withCurrentAdvance(summary.getCurrentAdvance());
+    }
+
+    // Getters only - removing setters for immutability
     public String getFarmerId() { return farmerId; }
-    public void setFarmerId(String farmerId) { this.farmerId = farmerId; }
-
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
     public BigDecimal getTotalPurchases() { return totalPurchases; }
-    public void setTotalPurchases(BigDecimal totalPurchases) { this.totalPurchases = totalPurchases; }
-
     public BigDecimal getTotalAdvances() { return totalAdvances; }
-    public void setTotalAdvances(BigDecimal totalAdvances) { this.totalAdvances = totalAdvances; }
-
     public BigDecimal getTotalRepayments() { return totalRepayments; }
-    public void setTotalRepayments(BigDecimal totalRepayments) { this.totalRepayments = totalRepayments; }
-
     public BigDecimal getCurrentAdvance() { return currentAdvance; }
-    public void setCurrentAdvance(BigDecimal currentAdvance) { this.currentAdvance = currentAdvance; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private String farmerId;
+        private String name;
+        private BigDecimal totalPurchases;
+        private BigDecimal totalAdvances;
+        private BigDecimal totalRepayments;
+        private BigDecimal currentAdvance;
+
+        public Builder withFarmerId(String farmerId) { this.farmerId = farmerId; return this; }
+        public Builder withName(String name) { this.name = name; return this; }
+        public Builder withTotalPurchases(BigDecimal totalPurchases) { this.totalPurchases = totalPurchases; return this; }
+        public Builder withTotalAdvances(BigDecimal totalAdvances) { this.totalAdvances = totalAdvances; return this; }
+        public Builder withTotalRepayments(BigDecimal totalRepayments) { this.totalRepayments = totalRepayments; return this; }
+        public Builder withCurrentAdvance(BigDecimal currentAdvance) { this.currentAdvance = currentAdvance; return this; }
+
+        public FarmerSummary build() { return new FarmerSummary(this); }
+    }
 }

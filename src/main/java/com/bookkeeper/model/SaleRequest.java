@@ -15,34 +15,70 @@ public class SaleRequest {
     private LocalDate paymentDate;
     private String notes;
 
-    // getters and setters
+    public static Builder from(SaleRequest request) {
+        return builder()
+            .withDate(request.getDate())
+            .withInvoiceNumber(request.getInvoiceNumber())
+            .withBuyer(request.getBuyer())
+            .withFlowerType(request.getFlowerType())
+            .withQuantity(request.getQuantity())
+            .withRate(request.getRate())
+            .withPaymentStatus(request.getPaymentStatus())
+            .withDueDate(request.getDueDate())
+            .withPaymentDate(request.getPaymentDate())
+            .withNotes(request.getNotes());
+    }
+
+    // Getters only - removing setters for immutability
     public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
-
     public String getInvoiceNumber() { return invoiceNumber; }
-    public void setInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; }
-
     public String getBuyer() { return buyer; }
-    public void setBuyer(String buyer) { this.buyer = buyer; }
-
     public String getFlowerType() { return flowerType; }
-    public void setFlowerType(String flowerType) { this.flowerType = flowerType; }
-
     public BigDecimal getQuantity() { return quantity; }
-    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-
     public BigDecimal getRate() { return rate; }
-    public void setRate(BigDecimal rate) { this.rate = rate; }
-
     public String getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
-
     public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
-
     public LocalDate getPaymentDate() { return paymentDate; }
-    public void setPaymentDate(LocalDate paymentDate) { this.paymentDate = paymentDate; }
-
     public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+
+    private SaleRequest(Builder builder) {
+        this.date = builder.date;
+        this.invoiceNumber = builder.invoiceNumber;
+        this.buyer = builder.buyer;
+        this.flowerType = builder.flowerType;
+        this.quantity = builder.quantity;
+        this.rate = builder.rate;
+        this.paymentStatus = builder.paymentStatus;
+        this.dueDate = builder.dueDate;
+        this.paymentDate = builder.paymentDate;
+        this.notes = builder.notes;
+    }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private LocalDate date;
+        private String invoiceNumber;
+        private String buyer;
+        private String flowerType;
+        private BigDecimal quantity;
+        private BigDecimal rate;
+        private String paymentStatus;
+        private LocalDate dueDate;
+        private LocalDate paymentDate;
+        private String notes;
+
+        public Builder withDate(LocalDate date) { this.date = date; return this; }
+        public Builder withInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; return this; }
+        public Builder withBuyer(String buyer) { this.buyer = buyer; return this; }
+        public Builder withFlowerType(String flowerType) { this.flowerType = flowerType; return this; }
+        public Builder withQuantity(BigDecimal quantity) { this.quantity = quantity; return this; }
+        public Builder withRate(BigDecimal rate) { this.rate = rate; return this; }
+        public Builder withPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; return this; }
+        public Builder withDueDate(LocalDate dueDate) { this.dueDate = dueDate; return this; }
+        public Builder withPaymentDate(LocalDate paymentDate) { this.paymentDate = paymentDate; return this; }
+        public Builder withNotes(String notes) { this.notes = notes; return this; }
+
+        public SaleRequest build() { return new SaleRequest(this); }
+    }
 }

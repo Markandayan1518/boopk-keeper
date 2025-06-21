@@ -22,14 +22,18 @@ class JournalServiceTest {
 
     @Test
     void testAddBalancedEntry() {
-        JournalEntry entry = new JournalEntry();
-        entry.setDate(LocalDate.now());
-        entry.setDescription("Test");
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("A"); dr.setDebit(new BigDecimal("100")); dr.setCredit(null);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("B"); cr.setDebit(null); cr.setCredit(new BigDecimal("100"));
-        entry.setLines(Arrays.asList(dr, cr));
+        JournalEntry entry = JournalEntry.builder()
+            .withDate(LocalDate.now())
+            .withDescription("Test")
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("A").withDebit(new BigDecimal("100")).withCredit(null)
+                    .build(),
+                JournalEntryLine.builder()
+                    .withAccount("B").withDebit(null).withCredit(new BigDecimal("100"))
+                    .build()
+            ))
+            .build();
         JournalEntry saved = journalService.addEntry(entry);
         assertNotNull(saved);
         assertTrue(saved.getId().startsWith("je"));
@@ -37,42 +41,57 @@ class JournalServiceTest {
 
     @Test
     void testAddUnbalancedEntry() {
-        JournalEntry entry = new JournalEntry();
-        entry.setDate(LocalDate.now());
-        entry.setDescription("Unbalanced");
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("A"); dr.setDebit(new BigDecimal("100")); dr.setCredit(null);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("B"); cr.setDebit(null); cr.setCredit(new BigDecimal("90"));
-        entry.setLines(Arrays.asList(dr, cr));
+        JournalEntry entry = JournalEntry.builder()
+            .withDate(LocalDate.now())
+            .withDescription("Unbalanced")
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("A").withDebit(new BigDecimal("100")).build(),
+                JournalEntryLine.builder()
+                    .withAccount("B").withCredit(new BigDecimal("90")).build()
+            ))
+            .build();
         assertNull(journalService.addEntry(entry));
     }
 
     @Test
     void testListGetUpdateRemove() {
         // add
-        JournalEntry entry = new JournalEntry();
-        entry.setDate(LocalDate.now());
-        entry.setDescription("Balance");
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("A"); dr.setDebit(new BigDecimal("50")); dr.setCredit(null);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("B"); cr.setDebit(null); cr.setCredit(new BigDecimal("50"));
-        entry.setLines(Arrays.asList(dr, cr));
+        JournalEntry entry = JournalEntry.builder()
+            .withDate(LocalDate.now())
+            .withDescription("Balance")
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder().withAccount("A").withDebit(new BigDecimal("50")).build(),
+                JournalEntryLine.builder().withAccount("B").withCredit(new BigDecimal("50")).build()
+            ))
+            .build();
         JournalEntry saved = journalService.addEntry(entry);
         assertNotNull(saved);
         String id = saved.getId();
+
         // list
         List<JournalEntry> all = journalService.listEntries();
         assertTrue(all.stream().anyMatch(e -> e.getId().equals(id)));
+
         // get
         assertTrue(journalService.getEntryById(id).isPresent());
+
         // update balanced
-        saved.setDescription("Updated");
-        assertTrue(journalService.updateEntry(id, saved));
+        JournalEntry updated = JournalEntry.from(saved)
+            .withDescription("Updated")
+            .build();
+        assertTrue(journalService.updateEntry(id, updated));
+
         // update unbalanced
-        saved.getLines().get(0).setDebit(new BigDecimal("60"));
-        assertFalse(journalService.updateEntry(id, saved));
+        JournalEntryLine unbalancedLine = JournalEntryLine.builder()
+            .withAccount("A")
+            .withDebit(new BigDecimal("60"))
+            .build();
+        updated = JournalEntry.from(updated)
+            .withLines(Arrays.asList(unbalancedLine, saved.getLines().get(1)))
+            .build();
+        assertFalse(journalService.updateEntry(id, updated));
+
         // remove
         assertTrue(journalService.removeEntry(id));
         assertFalse(journalService.getEntryById(id).isPresent());

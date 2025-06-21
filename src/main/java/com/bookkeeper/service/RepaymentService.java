@@ -29,8 +29,11 @@ public class RepaymentService {
      * Returns the saved Repayment or null if not allowed or farmer not found.
      */
     public Repayment addRepayment(Repayment rep) {
+        // check if repayment is valid
         boolean ok = farmerService.recordRepayment(rep.getFarmerId(), rep.getAmount());
         if (!ok) return null;
+
+        // generate unique ID: repYYYMMDD_farmerId[_n]
         String dateStr = StringUtils.remove(rep.getDate().toString(), '-');
         String baseId = "rep" + dateStr + "_" + rep.getFarmerId();
         String id = baseId;
@@ -38,24 +41,40 @@ public class RepaymentService {
         while (repayments.containsKey(id)) {
             id = baseId + "_" + suffix++;
         }
-        rep.setId(id);
-        repayments.put(id, rep);
-        // Create journal entry: Dr Cash, Cr AdvancesToFarmers
-        JournalEntry je = new JournalEntry();
-        je.setDate(rep.getDate());
-        je.setDescription("Repayment " + rep.getId());
-        List<JournalEntryLine> lines = new ArrayList<>();
-        JournalEntryLine dr = new JournalEntryLine();
-        dr.setAccount("Cash"); dr.setDebit(rep.getAmount()); dr.setCredit(null);
-        dr.setReferenceType("Repayment"); dr.setReferenceId(rep.getId());
-        lines.add(dr);
-        JournalEntryLine cr = new JournalEntryLine();
-        cr.setAccount("AdvancesToFarmers"); cr.setDebit(null); cr.setCredit(rep.getAmount());
-        cr.setReferenceType("Repayment"); cr.setReferenceId(rep.getId());
-        lines.add(cr);
-        je.setLines(lines);
+
+        Repayment saved = Repayment.builder()
+            .withId(id)
+            .withDate(rep.getDate())
+            .withFarmerId(rep.getFarmerId())
+            .withAmount(rep.getAmount())
+            .withPaymentMode(rep.getPaymentMode())
+            .withReceiptNumber(rep.getReceiptNumber())
+            .withRemarks(rep.getRemarks())
+            .build();
+
+        repayments.put(id, saved);
+
+        // Create journal entry
+        JournalEntry je = JournalEntry.builder()
+            .withDate(rep.getDate())
+            .withDescription("Repayment " + saved.getId())
+            .withLines(Arrays.asList(
+                JournalEntryLine.builder()
+                    .withAccount("Cash")
+                    .withDebit(rep.getAmount())
+                    .withReferenceType("Repayment")
+                    .withReferenceId(id)
+                    .build(),
+                JournalEntryLine.builder()
+                    .withAccount("AdvancesToFarmers")
+                    .withCredit(rep.getAmount())
+                    .withReferenceType("Repayment")
+                    .withReferenceId(id)
+                    .build()
+            ))
+            .build();
         journalService.addEntry(je);
-        return rep;
+        return saved;
     }
 
     public List<Repayment> listRepayments() {

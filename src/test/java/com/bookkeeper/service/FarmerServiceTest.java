@@ -49,9 +49,11 @@ class FarmerServiceTest {
     @Test
     void testUpdateFarmer() {
         Farmer f = service.addFarmer("Carl", "City", "", "", BigDecimal.ZERO, BigDecimal.ZERO, Arrays.asList(), "", "");
-        f.setContact("99999");
-        boolean updated = service.updateFarmer(f);
-        assertTrue(updated);
+        Farmer updated = Farmer.from(f)
+            .withContact("99999")
+            .build();
+        boolean success = service.updateFarmer(updated);
+        assertTrue(success);
         Optional<Farmer> found = service.getFarmerById(f.getId());
         assertTrue(found.isPresent());
         assertEquals("99999", found.get().getContact());
@@ -67,8 +69,11 @@ class FarmerServiceTest {
 
     @Test
     void testUpdateNonexistent() {
-        Farmer fake = new Farmer();
-        fake.setId("nope");
+        Farmer fake = Farmer.builder()
+            .withId("nope")
+            .withName("Fake")
+            .withCity("Nowhere")
+            .build();
         assertFalse(service.updateFarmer(fake));
     }
 

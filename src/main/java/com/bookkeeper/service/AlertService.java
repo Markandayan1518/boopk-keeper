@@ -39,24 +39,26 @@ public class AlertService {
             BigDecimal limit = f.getCreditLimit();
             // credit limit breach
             if (limit != null && advance.compareTo(limit) > 0) {
-                Alert a = new Alert();
-                a.setType("CreditLimitBreach");
-                a.setEntityId(f.getId());
-                a.setMessage(messageSource.getMessage(
+                Alert a = Alert.builder()
+                    .withType("CreditLimitBreach")
+                    .withEntityId(f.getId())
+                    .withMessage(messageSource.getMessage(
                         "alert.creditLimitBreach",
                         new Object[]{advance, limit},
-                        LocaleContextHolder.getLocale()));
+                        LocaleContextHolder.getLocale()))
+                    .build();
                 alerts.add(a);
             }
             // large advance
             if (advance.compareTo(largeAdvanceThreshold) > 0) {
-                Alert a = new Alert();
-                a.setType("LargeAdvance");
-                a.setEntityId(f.getId());
-                a.setMessage(messageSource.getMessage(
+                Alert a = Alert.builder()
+                    .withType("LargeAdvance")
+                    .withEntityId(f.getId())
+                    .withMessage(messageSource.getMessage(
                         "alert.largeAdvance",
                         new Object[]{advance, largeAdvanceThreshold},
-                        LocaleContextHolder.getLocale()));
+                        LocaleContextHolder.getLocale()))
+                    .build();
                 alerts.add(a);
             }
         }
@@ -65,13 +67,14 @@ public class AlertService {
             if (s.getDueDate() != null && s.getPaymentStatus() != null
                     && !"PAID".equalsIgnoreCase(s.getPaymentStatus())
                     && s.getDueDate().isBefore(now)) {
-                Alert a = new Alert();
-                a.setType("OverduePayment");
-                a.setEntityId(s.getId());
-                a.setMessage(messageSource.getMessage(
+                Alert a = Alert.builder()
+                    .withType("OverduePayment")
+                    .withEntityId(s.getId())
+                    .withMessage(messageSource.getMessage(
                         "alert.overduePayment",
                         new Object[]{s.getId(), s.getDueDate()},
-                        LocaleContextHolder.getLocale()));
+                        LocaleContextHolder.getLocale()))
+                    .build();
                 alerts.add(a);
             }
         }
