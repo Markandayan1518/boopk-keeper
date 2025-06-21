@@ -40,6 +40,12 @@
           <artifactId>commons-csv</artifactId>
           <version>1.9.0</version>
         </dependency>
+        <!-- Apache Commons Lang for String utilities -->
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+          <version>3.14.0</version>
+        </dependency>
         <!-- JUnit Jupiter for testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

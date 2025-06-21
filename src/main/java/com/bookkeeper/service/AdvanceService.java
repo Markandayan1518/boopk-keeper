@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Service
 public class AdvanceService {
@@ -32,7 +33,7 @@ public class AdvanceService {
         boolean ok = farmerService.recordAdvance(adv.getFarmerId(), adv.getAmount());
         if (!ok) return null;
         // generate unique ID: advYYYYMMDD_farmerId[_n]
-        String dateStr = adv.getDate().toString().replaceAll("-", "");
+        String dateStr = StringUtils.remove(adv.getDate().toString(), '-');
         String baseId = "adv" + dateStr + "_" + adv.getFarmerId();
         String id = baseId;
         int suffix = 1;
